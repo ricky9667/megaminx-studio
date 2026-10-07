@@ -1,30 +1,51 @@
 @import "tailwindcss";
 
+:root {
+  color-scheme: light;
+  --background: #f7f8fa;
+  --surface: #ffffff;
+  --foreground: #202532;
+  --muted-foreground: #687181;
+  --secondary: #edf0f5;
+  --border: #e2e5eb;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #111827;
+  --surface: #1f2937;
+  --foreground: #f3f4f6;
+  --muted-foreground: #a8b3c3;
+  --secondary: #374151;
+  --border: #4b5563;
+}
+
 @theme inline {
-  --color-background: #f7f8fa;
-  --color-foreground: #202532;
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
   --color-primary: #2563eb;
   --color-primary-foreground: #ffffff;
-  --color-muted-foreground: #687181;
-  --color-secondary: #edf0f5;
-  --color-secondary-foreground: #202532;
-  --color-accent: #edf0f5;
-  --color-accent-foreground: #202532;
-  --color-input: #e2e5eb;
+  --color-muted-foreground: var(--muted-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--foreground);
+  --color-accent: var(--secondary);
+  --color-accent-foreground: var(--foreground);
+  --color-input: var(--border);
   --color-ring: #2563eb;
   --color-destructive: #dc2626;
   --color-destructive-foreground: #ffffff;
 }
 
 @layer base {
-  * { border-color: #e2e5eb; }
-  body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  * { border-color: var(--border); }
+  body { background: var(--background); color: var(--foreground); margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
   button:not(:disabled), [role="button"] { cursor: pointer; }
-  input:focus-visible, button:focus-visible { outline: 2px solid #2563eb; outline-offset: 3px; }
+  input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid #2563eb; outline-offset: 3px; }
 }
 
 .section-title { font-size: 13px; font-weight: 600; }
-.canvas { min-height: 330px; background-image: radial-gradient(#e2e5eb 0.7px, transparent 0.7px); background-size: 18px 18px; }
+.canvas { min-height: 330px; background-image: radial-gradient(var(--border) 0.7px, transparent 0.7px); background-size: 18px 18px; }
 .sticker { transition: filter 100ms; }
 .sticker:hover { filter: brightness(1.14); }
 .sticker:focus-visible { outline: none; stroke: #2563eb; stroke-width: 6px; }

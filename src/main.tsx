@@ -1,11 +1,26 @@
 import { StrictMode, useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Check, ChevronDown, Download, Pentagon, RotateCcw, Undo2 } from 'lucide-react'
+import { Check, ChevronDown, Download, Github, Moon, Pentagon, RotateCcw, Sun, Undo2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { backing, blankColors, exportSvg, ids, neutral, paint, palette, restoreColors, stickers, storageKey, type Colors } from './editor'
 import './index.css'
+import { initialTheme } from './theme'
 
 function App() {
+  const [theme, setTheme] = useState(() => initialTheme({ getItem: key => localStorage.getItem(key) }, window.matchMedia('(prefers-color-scheme: dark)').matches))
+  const themeLabel = `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#111827' : '#f7f8fa')
+  }, [theme])
+
+  function toggleTheme() {
+    const next = theme === 'dark' ? 'light' : 'dark'
+    setTheme(next)
+    try { localStorage.setItem('megaminx-studio-theme', next) }
+    catch { /* The toggle still works when browser storage is unavailable. */ }
+  }
+
   const [history, setHistory] = useState<Colors[]>(() => {
     try { return [restoreColors(localStorage.getItem(storageKey))] }
     catch { return [blankColors()] }
@@ -47,16 +62,24 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="flex h-20 items-center justify-between border-b bg-white px-5 sm:px-8">
+      <header className="flex min-h-20 flex-wrap items-center justify-between gap-3 border-b bg-surface px-5 py-4 sm:px-8">
         <div className="flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-white"><Pentagon size={23} strokeWidth={1.8}/></div>
           <div><h1 className="text-lg font-semibold tracking-tight">Megaminx Studio</h1><p className="text-xs text-muted-foreground">SVG editor</p></div>
         </div>
-        <Button onClick={download} className="gap-2 rounded-lg shadow-sm"><Download size={16}/><span className="hidden min-[380px]:inline">Export SVG</span><span className="min-[380px]:hidden">Export</span></Button>
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label={themeLabel} title={themeLabel} aria-pressed={theme === 'dark'} className="rounded-lg">
+            {theme === 'dark' ? <Sun size={20} aria-hidden="true"/> : <Moon size={20} aria-hidden="true"/>}
+          </Button>
+          <Button variant="ghost" size="icon" asChild className="rounded-lg">
+            <a href="https://github.com/ricky9667/megaminx-studio" target="_blank" rel="noreferrer" aria-label="GitHub repository" title="GitHub"><Github size={20} aria-hidden="true"/></a>
+          </Button>
+          <Button onClick={download} aria-label="Export SVG" title="Export SVG" className="gap-2 rounded-lg shadow-sm"><Download size={16} aria-hidden="true"/><span className="hidden sm:inline">Export SVG</span></Button>
+        </div>
       </header>
 
       <main className="workspace grid min-h-[calc(100svh-5rem)] lg:grid-cols-[320px_1fr]">
-        <aside className="order-2 flex flex-col border-t bg-white lg:order-1 lg:border-t-0 lg:border-r" aria-label="Sticker controls">
+        <aside className="order-2 flex flex-col border-t bg-surface lg:order-1 lg:border-t-0 lg:border-r" aria-label="Sticker controls">
           <div className="w-full max-w-xl self-center space-y-7 p-6 lg:max-w-none">
             <section>
               <p className="section-title">Selected sticker</p>
@@ -71,7 +94,7 @@ function App() {
                   onChange={event => { const value = event.target.value.toUpperCase(); setQuery(value); if (ids.includes(value)) setSelected(value) }}
                   onBlur={() => setQuery(selected)}
                   onKeyDown={event => { if (event.key === 'Enter' || event.key === 'Escape') { setQuery(selected); event.currentTarget.blur() } }}
-                  className="h-10 w-full rounded-lg border bg-white px-3 pr-8 font-mono text-sm"/>
+                  className="h-10 w-full rounded-lg border bg-surface px-3 pr-8 font-mono text-sm"/>
                 <ChevronDown className="pointer-events-none absolute top-3 right-3 size-4 text-muted-foreground"/>
                 <datalist id="sticker-labels">{ids.map(id => <option key={id} value={id}/>)}</datalist>
               </div>
@@ -117,9 +140,9 @@ function App() {
         <section className="preview-panel order-1 flex min-w-0 flex-col p-5 sm:p-8 lg:order-2" aria-label="Megaminx preview">
           <div className="mb-5 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2"><span className="size-2 rounded-full bg-primary"/><h2 className="text-sm font-medium">Preview</h2></div>
-            <span className="rounded-full border bg-white px-3 py-1 text-xs text-muted-foreground">{coloredCount} / 66 colored</span>
+            <span className="rounded-full border bg-surface px-3 py-1 text-xs text-muted-foreground">{coloredCount} / 66 colored</span>
           </div>
-          <div className="canvas relative flex flex-1 items-center justify-center overflow-hidden rounded-2xl border bg-white">
+          <div className="canvas relative flex flex-1 items-center justify-center overflow-hidden rounded-2xl border bg-surface">
             <svg viewBox="0 0 1225 913" className="megaminx w-full max-w-[1050px]" role="group" aria-label="Megaminx. Select a sticker to change its color.">
               <polygon points={backing.points} fill="#1D110E"/>
               {stickers.map(sticker => (
