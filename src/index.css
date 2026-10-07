@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #f7f8fa;
+  --color-foreground: #202532;
+  --color-primary: #2563eb;
+  --color-primary-foreground: #ffffff;
+  --color-muted-foreground: #687181;
+  --color-secondary: #edf0f5;
+  --color-secondary-foreground: #202532;
+  --color-accent: #edf0f5;
+  --color-accent-foreground: #202532;
+  --color-input: #e2e5eb;
+  --color-ring: #2563eb;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+}
+
+@layer base {
+  * { border-color: #e2e5eb; }
+  body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  button:not(:disabled), [role="button"] { cursor: pointer; }
+  input:focus-visible, button:focus-visible { outline: 2px solid #2563eb; outline-offset: 3px; }
+}
+
+.section-title { font-size: 13px; font-weight: 600; }
+.canvas { min-height: 330px; background-image: radial-gradient(#e2e5eb 0.7px, transparent 0.7px); background-size: 18px 18px; }
+.sticker { transition: filter 100ms; }
+.sticker:hover { filter: brightness(1.14); }
+.sticker:focus-visible { outline: none; stroke: #2563eb; stroke-width: 6px; }
+.swatch { transition: transform 100ms, box-shadow 100ms; }
+.swatch:hover { transform: translateY(-2px); box-shadow: 0 4px 8px #20253215; }
+.swatch[aria-pressed="true"] { outline: 2px solid #2563eb; outline-offset: 3px; }
+@media (min-width: 1024px) { .preview-panel { max-height: max(780px, calc(100svh - 5rem)); } }
+@media (max-width: 1023px) { .canvas { flex: none; } .megaminx { max-height: 55svh; min-height: 280px; } }
+@media (prefers-reduced-motion: reduce) { .sticker, .swatch { transition: none; } }
