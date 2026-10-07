@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test'
-import { blankColors, exportSvg, ids, neutral, paint, restoreColors, stickers } from './editor'
+import { backing, blankColors, exportPng, exportSvg, ids, neutral, paint, restoreColors, stickers } from './editor'
 
 test('all 66 labels map to geometry; colors restore safely and export without editor decoration', () => {
   expect(ids.length).toBe(66)
@@ -20,4 +20,32 @@ test('all 66 labels map to geometry; colors restore safely and export without ed
   expect(svg.match(/<polygon /g)?.length).toBe(67)
   expect(svg).not.toMatch(/<text|<rect|aria-|tabindex|class=|metadata|onClick/)
   expect(exportSvg({ FC: '<script>' })).not.toContain('<script>')
+})
+
+test('PNG export draws the backing and colored stickers on a transparent 1225 × 913 canvas', () => {
+  const originals = { document: globalThis.document, Path2D: globalThis.Path2D }
+  const drawn: { path: string, color: string }[] = []
+  const context = {
+    fillStyle: '',
+    fill(path: { data: string }) { drawn.push({ path: path.data, color: this.fillStyle }) },
+  }
+  const canvas = {
+    width: 0, height: 0,
+    getContext(type: string) { expect(type).toBe('2d'); return context },
+    toDataURL(type: string) { expect(type).toBe('image/png'); return 'data:image/png;base64,png' },
+  }
+  Object.assign(globalThis, {
+    document: { createElement(tag: string) { expect(tag).toBe('canvas'); return canvas } },
+    Path2D: class { constructor(public data: string) {} },
+  })
+  try {
+    const colors = paint(blankColors(), 'FC', '#00D5E8')
+    expect(exportPng(colors)).toBe('data:image/png;base64,png')
+    expect([canvas.width, canvas.height]).toEqual([1225, 913])
+    expect(drawn).toEqual([backing, ...stickers].map(({ id, points }) => ({
+      path: `M${points}Z`, color: id === 'lines' ? '#1D110E' : colors[id],
+    })))
+  } finally {
+    Object.assign(globalThis, originals)
+  }
 })

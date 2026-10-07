@@ -36,6 +36,19 @@ export function exportSvg(colors: Colors): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1225 913" width="1225" height="913">\n  <title>Megaminx</title>\n${polygons}\n</svg>\n`
 }
 
+export function exportPng(colors: Colors): string {
+  const canvas = document.createElement('canvas')
+  canvas.width = 1225
+  canvas.height = 913
+  const context = canvas.getContext('2d')
+  if (!context) throw new Error('PNG export requires canvas support.')
+  for (const { id, points } of geometry) {
+    context.fillStyle = id === 'lines' ? '#1D110E' : isColor(colors[id]) ? colors[id] : neutral
+    context.fill(new Path2D(`M${points}Z`))
+  }
+  return canvas.toDataURL('image/png')
+}
+
 export const palette = [
   ['White', '#FFFFFF'], ['Yellow', '#FFD500'], ['Red', '#E53935'],
   ['Orange', '#FF8A00'], ['Dark green', '#2EAD4B'], ['Light green', '#A8DF65'],

@@ -2,7 +2,7 @@ import { StrictMode, useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Check, ChevronDown, Download, Github, Moon, Pentagon, RotateCcw, Sun, Undo2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { backing, blankColors, exportSvg, ids, neutral, paint, palette, restoreColors, stickers, storageKey, type Colors } from './editor'
+import { backing, blankColors, exportPng, exportSvg, ids, neutral, paint, palette, restoreColors, stickers, storageKey, type Colors } from './editor'
 import './index.css'
 import { initialTheme } from './theme'
 
@@ -51,13 +51,13 @@ function App() {
     setHistory(previous => [...previous.slice(-100), next])
   }
 
-  function download() {
-    const url = URL.createObjectURL(new Blob([exportSvg(colors)], { type: 'image/svg+xml' }))
+  function download(format: 'svg' | 'png') {
+    const url = format === 'png' ? exportPng(colors) : URL.createObjectURL(new Blob([exportSvg(colors)], { type: 'image/svg+xml' }))
     const link = document.createElement('a')
     link.href = url
-    link.download = 'megaminx.svg'
+    link.download = `megaminx.${format}`
     link.click()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
+    if (format === 'svg') setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 
   return (
@@ -65,7 +65,7 @@ function App() {
       <header className="flex min-h-20 flex-wrap items-center justify-between gap-3 border-b bg-surface px-5 py-4 sm:px-8">
         <div className="flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-white"><Pentagon size={23} strokeWidth={1.8}/></div>
-          <div><h1 className="text-lg font-semibold tracking-tight">Megaminx Studio</h1><p className="text-xs text-muted-foreground">SVG editor</p></div>
+          <div><h1 className="text-lg font-semibold tracking-tight">Megaminx Studio</h1><p className="text-xs text-muted-foreground">SVG / PNG editor</p></div>
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
           <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label={themeLabel} title={themeLabel} aria-pressed={theme === 'dark'} className="rounded-lg">
@@ -74,7 +74,11 @@ function App() {
           <Button variant="ghost" size="icon" asChild className="rounded-lg">
             <a href="https://github.com/ricky9667/megaminx-studio" target="_blank" rel="noreferrer" aria-label="GitHub repository" title="GitHub"><Github size={20} aria-hidden="true"/></a>
           </Button>
-          <Button onClick={download} aria-label="Export SVG" title="Export SVG" className="gap-2 rounded-lg shadow-sm"><Download size={16} aria-hidden="true"/><span className="hidden sm:inline">Export SVG</span></Button>
+          <Button popoverTarget="export-menu" aria-label="Export" title="Export" className="export-trigger gap-2 rounded-lg shadow-sm"><Download size={16} aria-hidden="true"/><span className="hidden sm:inline">Export</span><ChevronDown size={14} aria-hidden="true"/></Button>
+          <div id="export-menu" popover="auto" role="group" aria-label="Export format" className="export-menu min-w-40 rounded-lg border bg-surface p-1 text-foreground shadow-lg">
+            <Button variant="ghost" autoFocus popoverTarget="export-menu" popoverTargetAction="hide" onClick={() => download('png')} className="w-full justify-start gap-2"><Download size={16} aria-hidden="true"/>Export PNG</Button>
+            <Button variant="ghost" popoverTarget="export-menu" popoverTargetAction="hide" onClick={() => download('svg')} className="w-full justify-start gap-2"><Download size={16} aria-hidden="true"/>Export SVG</Button>
+          </div>
         </div>
       </header>
 
@@ -125,7 +129,7 @@ function App() {
               <label className="flex cursor-pointer items-center justify-between text-sm" htmlFor="show-labels">Show preview labels
                 <input id="show-labels" type="checkbox" checked={showLabels} onChange={event => setShowLabels(event.target.checked)} className="size-4 accent-blue-600"/>
               </label>
-              <p className="mt-2 text-xs text-muted-foreground">Labels are hidden in the exported SVG.</p>
+              <p className="mt-2 text-xs text-muted-foreground">Labels are hidden in exported images.</p>
             </section>
           </div>
           <div className="mt-auto w-full border-t p-6">
