@@ -52,6 +52,11 @@
 .swatch { transition: transform 100ms, box-shadow 100ms; }
 .swatch:hover { transform: translateY(-2px); box-shadow: 0 4px 8px #20253215; }
 .swatch[aria-pressed="true"] { outline: 2px solid #2563eb; outline-offset: 3px; }
-@media (min-width: 1024px) { .preview-panel { max-height: max(780px, calc(100svh - 5rem)); } }
+@media (min-width: 1024px) {
+  .app-shell { display: grid; height: 100svh; grid-template-rows: auto minmax(0, 1fr) auto; }
+  .workspace, .preview-panel, .canvas { min-height: 0; }
+  .workspace > aside { overflow-y: auto; }
+  .megaminx { height: 100%; max-height: 100%; }
+}
 @media (max-width: 1023px) { .canvas { flex: none; } .megaminx { max-height: 55svh; min-height: 280px; } }
 @media (prefers-reduced-motion: reduce) { .sticker, .swatch { transition: none; } }

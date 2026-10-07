@@ -61,7 +61,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="app-shell min-h-screen bg-background text-foreground">
       <header className="flex min-h-20 flex-wrap items-center justify-between gap-3 border-b bg-surface px-5 py-4 sm:px-8">
         <div className="flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-white"><Pentagon size={23} strokeWidth={1.8}/></div>
@@ -78,7 +78,7 @@ function App() {
         </div>
       </header>
 
-      <main className="workspace grid min-h-[calc(100svh-5rem)] lg:grid-cols-[320px_1fr]">
+      <main className="workspace grid min-h-[calc(100svh-8rem)] lg:grid-cols-[320px_1fr]">
         <aside className="order-2 flex flex-col border-t bg-surface lg:order-1 lg:border-t-0 lg:border-r" aria-label="Sticker controls">
           <div className="w-full max-w-xl self-center space-y-7 p-6 lg:max-w-none">
             <section>
@@ -167,6 +167,10 @@ function App() {
           </div>
         </section>
       </main>
+      <footer className="flex items-center justify-center gap-2 border-t bg-surface px-5 py-3 text-sm font-medium text-muted-foreground sm:px-8">
+        <img src={`${import.meta.env.BASE_URL}assets/ricky-hu-logo.png`} alt="Ricky Hu Logo" className="h-6 w-auto opacity-70"/>
+        <p><a href="https://ricky-hu.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">Ricky Hu</a> &copy; <span id="copyright-year">{new Date().getFullYear()}</span></p>
+      </footer>
     </div>
   )
 }
