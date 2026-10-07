@@ -1,6 +1,18 @@
 import { expect, test } from 'bun:test'
 import { backing, blankColors, exportPng, exportSvg, ids, neutral, paint, restoreColors, stickers } from './editor'
 
+test('batch coloring changes only selected stickers and preserves no-op snapshots', () => {
+  const blank = blankColors()
+  const selection = ['FC', 'U1', 'unknown', 'FC']
+  const colored = paint(blank, selection, '#00D5E8')
+  expect(colored).toEqual({ ...blank, FC: '#00D5E8', U1: '#00D5E8' })
+  expect(blank).toEqual(blankColors())
+  expect(selection).toEqual(['FC', 'U1', 'unknown', 'FC'])
+  expect(paint(colored, ['FC', 'U1'], '#00D5E8')).toBe(colored)
+  expect(paint(colored, [], '#ffffff')).toBe(colored)
+  expect(paint(colored, selection, 'invalid')).toBe(colored)
+})
+
 test('all 66 labels map to geometry; colors restore safely and export without editor decoration', () => {
   expect(ids.length).toBe(66)
   expect(new Set(ids).size).toBe(66)

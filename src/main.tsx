@@ -26,7 +26,11 @@ function App() {
     catch { return [blankColors()] }
   })
   const colors = history[history.length - 1]
-  const [selected, setSelected] = useState('FC')
+  const [selectedIds, setSelectedIds] = useState(['FC'])
+  const [multiSelect, setMultiSelect] = useState(false)
+  const selected = selectedIds.at(-1) ?? 'FC'
+  const selectedColor = selectedIds.length && selectedIds.every(id => colors[id].toLowerCase() === colors[selected].toLowerCase())
+    ? colors[selected].toLowerCase() : undefined
   const [query, setQuery] = useState('FC')
   const [showLabels, setShowLabels] = useState(false)
   const [storageFailed, setStorageFailed] = useState(false)
@@ -40,9 +44,19 @@ function App() {
   }, [colors])
 
   function select(id: string, focus = false) {
-    setSelected(id)
+    setSelectedIds(previous => multiSelect
+      ? previous.includes(id) ? previous.filter(value => value !== id) : [...previous, id]
+      : [id])
     setQuery(id)
-    if (focus) labelInput.current?.focus({ preventScroll: true })
+    if (focus && !multiSelect) labelInput.current?.focus({ preventScroll: true })
+  }
+
+  function toggleMultiSelect() {
+    if (multiSelect) {
+      setSelectedIds([selected])
+      setQuery(selected)
+    }
+    setMultiSelect(!multiSelect)
   }
 
   function commit(next: Colors) {
@@ -86,6 +100,14 @@ function App() {
         <aside className="order-2 flex flex-col border-t bg-surface lg:order-1 lg:border-t-0 lg:border-r" aria-label="Sticker controls">
           <div className="w-full max-w-xl self-center space-y-7 p-6 lg:max-w-none">
             <section>
+              <label className="mb-4 flex cursor-pointer items-center justify-between text-sm" htmlFor="multi-select">Multi-select
+                <input id="multi-select" type="checkbox" checked={multiSelect} onChange={toggleMultiSelect} className="size-4 accent-blue-600"/>
+              </label>
+              {multiSelect ? <>
+                <p role="status" className="section-title">{selectedIds.length} stickers selected</p>
+                <p className="mt-2 text-xs text-muted-foreground">{!selectedIds.length ? 'Tap stickers to select them.' : selectedColor ? 'All selected stickers share a color.' : 'Mixed colors'}</p>
+                <Button variant="outline" className="mt-3 w-full rounded-lg" disabled={!selectedIds.length} onClick={() => setSelectedIds([])}>Clear selection</Button>
+              </> : <>
               <p className="section-title">Selected sticker</p>
               <div className="mt-3 flex items-center gap-3 rounded-xl border bg-background p-3">
                 <span className="size-11 shrink-0 rounded-lg border shadow-sm" style={{ backgroundColor: colors[selected] }} aria-hidden="true"/>
@@ -95,33 +117,34 @@ function App() {
               <div className="relative">
                 <input ref={labelInput} id="sticker-label" list="sticker-labels" autoComplete="off" spellCheck={false} value={query}
                   onFocus={event => event.currentTarget.select()}
-                  onChange={event => { const value = event.target.value.toUpperCase(); setQuery(value); if (ids.includes(value)) setSelected(value) }}
+                  onChange={event => { const value = event.target.value.toUpperCase(); setQuery(value); if (ids.includes(value)) setSelectedIds([value]) }}
                   onBlur={() => setQuery(selected)}
                   onKeyDown={event => { if (event.key === 'Enter' || event.key === 'Escape') { setQuery(selected); event.currentTarget.blur() } }}
                   className="h-10 w-full rounded-lg border bg-surface px-3 pr-8 font-mono text-sm"/>
                 <ChevronDown className="pointer-events-none absolute top-3 right-3 size-4 text-muted-foreground"/>
                 <datalist id="sticker-labels">{ids.map(id => <option key={id} value={id}/>)}</datalist>
               </div>
+              </>}
             </section>
 
             <section className="border-t pt-6">
               <p className="section-title">Sticker color</p>
-              <p className="mt-1 text-xs text-muted-foreground">Choose a color to apply to {selected}.</p>
+              <p className="mt-1 text-xs text-muted-foreground">{!selectedIds.length ? 'Select stickers to apply a color.' : `Choose a color to apply to ${multiSelect ? `${selectedIds.length} selected stickers` : selected}.`}</p>
               <div className="mt-4 grid grid-cols-4 gap-3 sm:grid-cols-6 lg:grid-cols-4">
                 {palette.map(([name, color]) => (
-                  <button key={name} type="button" title={name} aria-label={`Apply ${name}`} aria-pressed={colors[selected].toLowerCase() === color.toLowerCase()}
-                    onClick={() => commit(paint(colors, selected, color))} className="swatch flex aspect-square items-center justify-center rounded-xl border shadow-sm" style={{ backgroundColor: color }}>
-                    {colors[selected].toLowerCase() === color.toLowerCase() && <Check size={23} className={['White', 'Yellow', 'Light green', 'Beige', 'Gray', 'Pink', 'Light blue'].includes(name) ? 'text-slate-900' : 'text-white'}/>}
+                  <button key={name} type="button" title={name} aria-label={`Apply ${name}`} disabled={!selectedIds.length} aria-pressed={selectedColor === color.toLowerCase()}
+                    onClick={() => commit(paint(colors, selectedIds, color))} className="swatch flex aspect-square items-center justify-center rounded-xl border shadow-sm disabled:opacity-50" style={{ backgroundColor: color }}>
+                    {selectedColor === color.toLowerCase() && <Check size={23} className={['White', 'Yellow', 'Light green', 'Beige', 'Gray', 'Pink', 'Light blue'].includes(name) ? 'text-slate-900' : 'text-white'}/>}
                   </button>
                 ))}
               </div>
-              <Button variant="outline" className="mt-4 w-full justify-start gap-3 rounded-lg" onClick={() => commit(paint(colors, selected, neutral))} aria-pressed={colors[selected] === neutral}>
-                <span className="size-5 rounded border" style={{ backgroundColor: neutral }}/><span>Unassigned gray</span>{colors[selected] === neutral && <Check className="ml-auto size-4"/>}
+              <Button variant="outline" disabled={!selectedIds.length} className="mt-4 w-full justify-start gap-3 rounded-lg" onClick={() => commit(paint(colors, selectedIds, neutral))} aria-pressed={selectedColor === neutral}>
+                <span className="size-5 rounded border" style={{ backgroundColor: neutral }}/><span>Unassigned gray</span>{selectedColor === neutral && <Check className="ml-auto size-4"/>}
               </Button>
               <div className="mt-4 flex items-center gap-3 rounded-lg border px-3 py-2">
-                <input id="custom-color" type="color" aria-label="Apply a custom color" value={custom} onChange={event => { setCustom(event.target.value); commit(paint(colors, selected, event.target.value)) }} className="size-8 cursor-pointer border-0 bg-transparent"/>
+                <input id="custom-color" type="color" disabled={!selectedIds.length} aria-label="Apply a custom color" value={custom} onChange={event => { setCustom(event.target.value); commit(paint(colors, selectedIds, event.target.value)) }} className="size-8 cursor-pointer border-0 bg-transparent disabled:opacity-50"/>
                 <label htmlFor="custom-color" className="flex-1 text-sm">Custom color</label>
-                <button type="button" title="Apply current custom color" onClick={() => commit(paint(colors, selected, custom))} className="rounded px-1 py-2 font-mono text-xs text-muted-foreground">{custom.toUpperCase()}</button>
+                <button type="button" disabled={!selectedIds.length} title="Apply current custom color" onClick={() => commit(paint(colors, selectedIds, custom))} className="rounded px-1 py-2 font-mono text-xs text-muted-foreground disabled:opacity-50">{custom.toUpperCase()}</button>
               </div>
             </section>
 
@@ -135,7 +158,7 @@ function App() {
           <div className="mt-auto w-full border-t p-6">
             <div className="grid grid-cols-2 gap-3">
               <Button variant="outline" className="gap-2 rounded-lg" disabled={history.length < 2} onClick={() => setHistory(previous => previous.slice(0, -1))}><Undo2 size={15}/>Undo</Button>
-              <Button variant="ghost" className="gap-2 rounded-lg text-muted-foreground" disabled={!coloredCount} onClick={() => commit(blankColors())}><RotateCcw size={15}/>Reset</Button>
+              <Button variant="ghost" className="gap-2 rounded-lg text-muted-foreground" disabled={!coloredCount && (!multiSelect || !selectedIds.length)} onClick={() => { commit(blankColors()); setSelectedIds(multiSelect ? [] : ['FC']); setQuery('FC') }}><RotateCcw size={15}/>Reset</Button>
             </div>
             <p role="status" className={`mt-4 text-center text-xs ${storageFailed ? 'text-amber-700' : 'text-muted-foreground'}`}>{storageFailed ? 'Browser saving is unavailable. Export to keep your work.' : 'Saved automatically in this browser'}</p>
           </div>
@@ -147,19 +170,21 @@ function App() {
             <span className="rounded-full border bg-surface px-3 py-1 text-xs text-muted-foreground">{coloredCount} / 66 colored</span>
           </div>
           <div className="canvas relative flex flex-1 items-center justify-center overflow-hidden rounded-2xl border bg-surface">
-            <svg viewBox="0 0 1225 913" className="megaminx w-full max-w-[1050px]" role="group" aria-label="Megaminx. Select a sticker to change its color.">
+            <svg viewBox="0 0 1225 913" className="megaminx w-full max-w-[1050px]" role="group" aria-label={multiSelect ? 'Megaminx. Toggle stickers to select them, then choose a color.' : 'Megaminx. Select a sticker to change its color.'}>
               <polygon points={backing.points} fill="#1D110E"/>
               {stickers.map(sticker => (
                 <polygon key={sticker.id} id={sticker.id} points={sticker.points} fill={colors[sticker.id]} role="button" tabIndex={0}
-                  aria-label={`Select sticker ${sticker.id}`} aria-pressed={selected === sticker.id} className="sticker"
+                  aria-label={`${multiSelect && selectedIds.includes(sticker.id) ? 'Deselect' : 'Select'} sticker ${sticker.id}`} aria-pressed={selectedIds.includes(sticker.id)} className="sticker"
                   onClick={() => select(sticker.id, true)}
                   onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); select(sticker.id, true) } }}>
                   <title>{sticker.id}</title>
                 </polygon>
               ))}
               <g pointerEvents="none" fill="none" strokeLinejoin="round">
-                <polygon points={stickers.find(sticker => sticker.id === selected)?.points} stroke="white" strokeWidth="7"/>
-                <polygon points={stickers.find(sticker => sticker.id === selected)?.points} stroke="#2563eb" strokeWidth="3"/>
+                {stickers.filter(sticker => selectedIds.includes(sticker.id)).map(sticker => <g key={sticker.id}>
+                  <polygon points={sticker.points} stroke="white" strokeWidth="7"/>
+                  <polygon points={sticker.points} stroke="#2563eb" strokeWidth="3"/>
+                </g>)}
               </g>
               {showLabels && <g pointerEvents="none" fontFamily="Arial" fontSize="17" fontWeight="bold" textAnchor="middle" fill="white" stroke="#1D110E" strokeWidth="3" paintOrder="stroke" aria-hidden="true">
                 {stickers.map(sticker => <text key={sticker.id} x={sticker.x} y={sticker.y}>{sticker.id}</text>)}
@@ -167,7 +192,7 @@ function App() {
             </svg>
           </div>
           <div className="mt-5 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-            <p>Click a sticker, then choose a color.</p><p>1225 × 913 · Transparent SVG</p>
+            <p>{multiSelect ? 'Tap stickers to add or remove them, then choose a color.' : 'Click a sticker, then choose a color.'}</p><p>1225 × 913 · Transparent SVG</p>
           </div>
         </section>
       </main>

@@ -23,9 +23,12 @@ export function restoreColors(raw: string | null): Colors {
   return colors
 }
 
-export function paint(colors: Colors, id: string, color: string): Colors {
-  if (!ids.includes(id) || !isColor(color) || colors[id] === color) return colors
-  return { ...colors, [id]: color }
+export function paint(colors: Colors, selection: string | readonly string[], color: string): Colors {
+  if (!isColor(color)) return colors
+  const changed = (typeof selection === 'string' ? [selection] : selection)
+    .filter(id => ids.includes(id) && colors[id] !== color)
+  if (!changed.length) return colors
+  return { ...colors, ...Object.fromEntries(changed.map(id => [id, color])) }
 }
 
 export function exportSvg(colors: Colors): string {

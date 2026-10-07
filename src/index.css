@@ -48,6 +48,7 @@
 .export-trigger { anchor-name: --export-trigger; }
 .export-menu { position-anchor: --export-trigger; inset: auto; top: anchor(bottom); right: anchor(right); margin: 0.5rem 0 0; }
 .canvas { min-height: 330px; background-image: radial-gradient(var(--border) 0.7px, transparent 0.7px); background-size: 18px 18px; }
+.megaminx { touch-action: manipulation; }
 .sticker { transition: filter 100ms; }
 .sticker:hover { filter: brightness(1.14); }
 .sticker:focus-visible { outline: none; stroke: #2563eb; stroke-width: 6px; }
